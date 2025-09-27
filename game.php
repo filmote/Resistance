@@ -184,7 +184,7 @@
         <div class="alert-message" id="alert-message">
             <strong>Error:</strong> Something went wrong while restarting the game.
         </div>
-        <button class="alert-close" onclick="window.location.href='index.html'">&times;</button>
+        <button class="alert-close" id="alert-close">&times;</button>
     </div>
 
     <div id="role" class="role-info role-<?php echo $player['role']; ?>">
@@ -263,6 +263,8 @@
 
         function restartGame() {
 
+            const btn = document.getElementById("alert-close");
+
             fetch('restart_game.php', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
@@ -284,9 +286,18 @@
                     else {
                         showAlertMsg("error", 'Fetch failed: ' + err.message);
                     }                    
+
+                    btn.addEventListener("click", function() {
+                        window.location.href='index.html';
+                    });
+
                 }
             })
             .catch(err => {
+
+                btn.addEventListener("click", function() {
+                    window.location.href='index.html';
+                });
                 showAlertMsg("error", 'Fetch failed: ' + err.message);
             });
 
@@ -294,15 +305,44 @@
 
         function updateGameState() {
 
+            const btn = document.getElementById("alert-close");
+
             fetch(`get_game_state.php?id=${gameId}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        gameState = data.game_state;
-                        updateUI();
-                    }
-                })
-                .catch(err => console.error(err));
+            .then(r => {
+                if (!r.ok) { // HTTP-level error
+                    throw new Error(`Server error ${r.status}: ${r.statusText}`);
+                }
+                return r.json(); // try parse JSON
+            })
+            .then(d => {
+                if (d.success) {
+
+                    gameState = d.game_state;
+                    updateUI();
+
+                } else {
+
+                    btn.addEventListener("click", function() {
+                        const alertBox = document.getElementById('game-alert');
+                        alertBox.classList = null;
+                        alertBox.classList.add('hidden');                
+                    });
+                    showAlertMsg("error", 'Fetch failed: ' + err.message);
+
+                }
+            })
+            .catch(err => {
+
+                btn.addEventListener("click", function() {
+                    const alertBox = document.getElementById('game-alert');
+                    alertBox.classList = null;
+                    alertBox.classList.add('hidden');                
+                });
+                showAlertMsg("error", 'Fetch failed: ' + err.message);
+            });
+
+
+
         }
 
         function updateUI() {
