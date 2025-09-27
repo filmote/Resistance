@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Resistance (5 players)</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<style>
+
+		.hidden { display: none; }			
+
+		body {
+			background-color: #dfdfdf;
+			font-family: system-ui, -apple-system, Roboto, Arial;
+			padding: 1em;
+			max-width: 800px;
+			margin: 0 auto;
+		}
+
+		h1,
+		h2 {
+			text-align: center;
+			margin: 0.6em 0;
+		}
+
+		input,
+		button {
+			padding: .5em;
+			font-size: 1em;
+			margin: .2em 0;
+			border-radius: 6px;
+			border: 1px solid #bbb;
+		}
+
+		.small {
+			font-size: .9em;
+			color: #666;
+		}
+
+		.slot {
+			padding: 10px;
+			border-radius: 6px;
+			margin-bottom: 8px;
+			background: #f7f7f8;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			flex-wrap: wrap;
+		}
+
+		.success {
+			color: #4CAF50;
+			font-weight: bold;
+		}
+
+		.game-ready {
+			background: #E8F5E8;
+			border: 2px solid #4CAF50;
+		}
+
+		/* === Game list cards === */
+		ul#activeGames {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+		}
+
+		ul#activeGames li {
+			background: #fff;
+			border-radius: 10px;
+			padding: 12px;
+			margin-bottom: 10px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			flex-wrap: wrap;
+		}
+
+		.game-info {
+			flex: 1 1 auto;
+			min-width: 0;
+		}
+
+		.game-actions {
+			display: flex;
+			gap: 8px;
+			flex: 0 0 auto;
+			justify-content: flex-end;
+			/* right aligned */
+		}
+
+		/* === Button styles === */
+		.actions-bar button {
+			background: #4CAF50;
+			/* green top buttons */
+			color: #fff;
+			border: none;
+			padding: 0.6em 1em;
+			border-radius: 6px;
+		}
+
+		.actions-bar button:hover {
+			background: #45a049;
+			cursor: pointer;
+		}
+
+		.btn-select,
+		.btn-kill {
+			border: none;
+			border-radius: 6px;
+			color: #fff;
+			padding: 0.5em 0.9em;
+			min-width: 90px;
+			text-align: center;
+		}
+
+		.btn-select {
+			background: #2196F3;
+		}
+
+		.btn-kill {
+			background: #e53935;
+		}
+
+		.btn-select:hover {
+			background: #1976d2;
+		}
+
+		.btn-kill:hover {
+			background: #c62828;
+		}
+
+		/* === Responsive tweaks === */
+		@media (max-width: 600px) {
+			body {
+				padding: 0.5em;
+			}
+
+			input[type="text"],
+			input[type="search"],
+			input[type="email"],
+			textarea,
+			select {
+				width: 100%;
+				box-sizing: border-box;
+			}
+
+			/* form button {
+				width: 100%;
+				box-sizing: border-box;
+			} */
+
+			/* keep select/delete equal width and right aligned */
+			.game-actions {
+				flex-direction: row;
+				justify-content: flex-end;
+			}
+
+			.game-actions .btn-select,
+			.game-actions .btn-kill {
+				flex: 1 1 0;
+				min-width: 90px;
+				max-width: 120px;
+			}
+
+			/* .slot {
+				flex-direction: column;
+				align-items: flex-start;
+			}	 */
+
+			.slot {
+				flex-direction: row;        /* keep row layout */
+				align-items: center;        /* vertical center */
+				flex-wrap: nowrap;          /* prevent wrapping */
+				justify-content: space-between;
+			}
+
+			.slot span {
+				white-space: nowrap;        /* text stays on one line */
+				overflow: hidden;
+				text-overflow: ellipsis;    /* prevent overflow if name too long */
+				flex: 1 1 auto;
+			}
+			
+			.slot span:last-child {
+				margin-left: auto;   /* push it to the far right */
+				text-align: right;   /* align its text to the right */
+				white-space: nowrap; /* keep it on one line */
+			}
+
+		}
+
+
+	</style>
+
+
+</head>
+
+<body>
+	<h1>The Resistance - Lobby</h1>
+
+	<section id="createSection" style="display:none;">
+		<h2>Create Game</h2>
+		<form id="createForm">
+			<table style="padding-top: 0px; padding-bottom: 0px;" border="0">
+				<tr>
+					<td>Game Name : &nbsp;&nbsp;</td>
+					<td><input name="game_name" placeholder="Game Name" required></td>
+				</tr>
+				<tr>
+					<td>Player 1</td>
+					<td><input name="names[]" id="player1" placeholder="Player 1" required></td>
+				</tr>
+				<tr>
+					<td>Player 2</td>
+					<td><input name="names[]" placeholder="Player 2" required></td>
+				</tr>
+				<tr>
+					<td>Player 3</td>
+					<td><input name="names[]" placeholder="Player 3" required></td>
+				</tr>
+				<tr>
+					<td>Player 4</td>
+					<td><input name="names[]" placeholder="Player 4" required></td>
+				</tr>
+				<tr>
+					<td>Player 5</td>
+					<td><input name="names[]" placeholder="Player 5" required></td>
+				</tr>
+			</table>
+			
+			<div class="actions-bar">
+				<button type="submit">Create Game</button>
+				<button onclick="cancelJoin()">Cancel</button>&nbsp;&nbsp;
+			</div>
+		</form>
+		<div id="createResult" class="small"></div>
+	</section>
+
+
+	<section id="gamesList" style="display:block;">
+		<hr>
+		<h2>Available Games</h2>
+		<ul id="activeGames"></ul>
+
+		<div class="actions-bar">
+			<button onclick="createNewGame()">Create New</button>
+			<button onclick="loadGames()">Refresh</button>
+		</div>
+
+	</section>
+
+	<section id="joinSection" style="display:none;">
+		<hr>
+		<h2>Join Selected Game</h2>
+		<p id="selectedGame" class="small"></p>
+		<div id="slots"></div>
+		<input id="joinGameId" type="hidden">
+		Join as :&nbsp;&nbsp;&nbsp;&nbsp;<input id="joinName" placeholder="Your Name (exact)"><br>
+		<div class="actions-bar">
+		<button onclick="joinGame(false, 0)">Join</button>
+		<button onclick="cancelJoin()">Cancel</button>
+		</div>		
+		<div id="roleReveal" class="small"></div>
+	</section>
+
+	<section id="game" style="display:none;">
+		<h2>Game Status</h2>
+		<div id="status" class="small"></div>
+		<div id="playersList"></div>
+		<div class="actions-bar">
+			<button id="enterGameBtn" onclick="enterGame()" style="display:none;">Enter Game</button>
+			<button onclick="cancelStatus()">Cancel</button>
+		</div>
+
+		<br/>
+
+		<div id="player_qr_0" class="hidden">
+			<h2>▼ Player <span id="player_name_0"></span>:</h2><br/>
+			<img src="blank.png" id="player_0"/>
+			<br/>
+			<br/>
+		</div>
+		<div id="player_qr_1" class="hidden">
+			<h2 style="text-align: left;">▼ Player <span id="player_name_1"></span>:</h2><br/>
+			<img src="blank.png" id="player_1"/>
+			<br/>
+			<br/>
+		</div>
+		<div id="player_qr_2" class="hidden">
+			<h2 style="text-align: left;">▼ Player <span id="player_name_2"></span>:</h2><br/>
+			<img src="blank.png" id="player_2"/>
+			<br/>
+			<br/>
+		</div>
+		<div id="player_qr_3" class="hidden">
+			<h2 style="text-align: left;">▼ Player <span id="player_name_3"></span>:</h2><br/>
+			<img src="blank.png" id="player_3"/>
+			<br/>
+			<br/>
+		</div>
+		<div id="player_qr_4" class="hidden">
+			<h2 style="text-align: left;">▼ Player <span id="player_name_4"></span>:</h2><br/>
+			<img src="blank.png" id="player_4"/>
+			<br/>
+			<br/>
+		</div>
+		<br/>
+	</section>
+
+
+	<script>
+		let selectedGameId = null;
+		let selectedGameName = null;
+		let currentPlayerName = null;
+		let pollInterval = null;
+
+		const params = new URLSearchParams(window.location.search);
+		const isAdmin = params.get("admin") === "true";
+
+		document.getElementById("createForm").addEventListener("submit", e => {
+			e.preventDefault();
+			const data = new FormData(e.target);
+			fetch("create_game.php", { method: "POST", body: data })
+
+				.then(
+					r => r.json()
+				)
+				.then(d => {
+					if (d.success) {
+						document.getElementById("createResult").innerText = "Game created: " + d.game_name;
+
+						// If we have successfully created a game then join it ..
+						$gameId = 0;
+						fetch("get_game.php")
+							.then(r => r.json())
+							.then(d => {
+								if (!d.success) { alert('Error loading games: ' + (d.error || 'unknown')); return; }
+								$gameId = d.game.id;
+								joinGame(true, $gameId);
+							}).catch(err => { console.error(err); alert('Failed to load games: ' + err); });
+
+						loadGames();
+
+					} else {
+						alert('Create error: ' + (d.error || 'unknown'));
+					}
+				}).catch(err => { alert('Network error: ' + err); });
+
+		});
+
+		function renderGame(game) {
+			const li = document.createElement("li");
+
+			// --- Info section (name + status) ---
+			const info = document.createElement("div");
+			info.className = "game-info";
+
+			const title = document.createElement("div");
+			title.textContent = game.name || "Unnamed Game";
+			title.style.fontWeight = "bold";
+
+			const status = document.createElement("div");
+			status.className = "game-status";
+
+			// Show status text
+			switch (game.status) {
+				case "waiting":
+					status.textContent = "⏳ Waiting for players";
+					break;
+				case "ready":
+					status.textContent = "✅ Ready";
+					li.classList.add("game-ready");
+					break;
+				case "inprogress":
+					status.textContent = "🎮 In Progress";
+					break;
+				default:
+					status.textContent = "Unknown";
+			}
+
+			info.appendChild(title);
+			info.appendChild(status);
+
+			// --- Actions section (buttons) ---
+			const actions = document.createElement("div");
+			actions.className = "game-actions";
+
+			const selectBtn = document.createElement("button");
+			selectBtn.className = "btn-select";
+			selectBtn.textContent = "Select";
+
+			selectBtn.onclick = () => selectGame(game.id, '');//escapeHtml(game.name));//joinGame(game.id);
+			actions.appendChild(selectBtn);
+
+			if (isAdmin) {
+				const delBtn = document.createElement("button");
+				delBtn.className = "btn-kill";
+				delBtn.textContent = "Delete";
+				delBtn.onclick = () => killGame(game.id);
+				actions.appendChild(delBtn);
+			}
+
+			li.appendChild(info);
+			li.appendChild(actions);
+
+			return li;
+		}
+
+		function loadGames() {
+
+			fetch("list_games.php")
+				.then(r => r.json())
+				.then(d => {
+					if (!d.success) { alert('Error loading games: ' + (d.error || 'unknown')); return; }
+					const list = document.getElementById("activeGames");
+					list.innerHTML = '';
+					if (d.games.length === 0) {
+						list.innerHTML = '<li>No games available</li>';
+						return;
+					}
+					const ul = document.getElementById("activeGames");
+					ul.innerHTML = "";
+					d.games.forEach(game => {
+						ul.appendChild(renderGame(game));
+					});
+				}).catch(err => { console.error(err); alert('Failed to load games: ' + err); });
+		}
+
+		function selectGame(id, name) {
+			selectedGameId = id;
+			selectedGameName = name;
+			document.getElementById("joinGameId").value = id;
+			document.getElementById("selectedGame").innerText = 'Joining: ' + name;
+			document.getElementById("joinSection").style.display = 'block';
+			document.getElementById("createSection").style.display = 'none';
+			document.getElementById("gamesList").style.display = 'none';
+			document.getElementById("joinName").value = "";
+			loadGameDetails(id);
+		}
+
+		function createNewGame(id, name) {
+			document.getElementById("joinSection").style.display = 'none';
+			document.getElementById("createSection").style.display = 'block';
+			document.getElementById("gamesList").style.display = 'none';
+		}
+
+		function cancelJoin(id, name) {
+			event.preventDefault();
+			document.getElementById("joinSection").style.display = 'none';
+			document.getElementById("createSection").style.display = 'none';
+			document.getElementById("gamesList").style.display = 'block';
+		}
+
+		function cancelStatus(id, name) {
+			event.preventDefault();
+			document.getElementById("joinSection").style.display = 'none';
+			document.getElementById("game").style.display = 'none';
+			document.getElementById("createSection").style.display = 'none';
+			document.getElementById("gamesList").style.display = 'block';
+		}
+
+		function loadGameDetails(id) {
+			fetch(`get_game.php?game_id=${id}`)
+				.then(r => r.json())
+				.then(d => {
+					if (!d.success) { alert('Error: ' + (d.error || 'unknown')); return; }
+					const slots = document.getElementById("slots");
+					slots.innerHTML = '';
+					d.players.forEach(p => {
+						const div = document.createElement('div');
+						div.className = 'slot';
+						if (p.claimed == 1) div.classList.add('game-ready');
+						//        div.innerHTML = `<span>${escapeHtml(p.name)}</span><span>${p.claimed==1 ? 'Joined' : 'Waiting'}</span>`;
+						div.innerHTML = `<span>${p.claimed == 1 ? escapeHtml(p.name) : 'Player'}</span><span align="right">${p.claimed == 1 ? 'Joined' : 'Waiting'}</span>`;
+						slots.appendChild(div);
+					});
+
+					// Update game section
+					const claimedCount = d.players.filter(p => p.claimed == 1).length;
+					if (claimedCount >= 5) {
+						document.getElementById('game').style.display = 'block';
+						document.getElementById('status').innerText = `Game Ready! All players joined - Status: ${d.game.status}`;
+					} else {
+						document.getElementById('game').style.display = 'none';
+					}
+
+					document.getElementById('roleReveal').innerText = '';
+				}).catch(err => { console.error(err); alert('Failed to load game details'); });
+		}
+
+		function joinGame(autoJoinFirst, gameId) {
+
+			id = document.getElementById('joinGameId').value;
+			name = document.getElementById('joinName').value.trim();
+
+			if (autoJoinFirst) {
+				name = document.getElementById('player1').value.trim();
+				id = gameId;
+			}
+
+			if (!id || !name) return alert('Select a game and enter your exact name');
+
+			fetch('join_game.php', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: `game_id=${id}&name=${encodeURIComponent(name)}`
+			}).then(r => r.json()).then(d => {
+				if (!d.success) return alert('Join error: ' + (d.error || 'unknown'));
+
+				currentPlayerName = name;
+
+				// show role (and spies if spy)
+				let txt = `Welcome ${d.name}! Role: ${d.role.toUpperCase()}`;
+				if (d.spies && d.spies.length) txt += '\nYour fellow spy(s): ' + d.spies.join(', ');
+				document.getElementById('roleReveal').innerText = txt;
+				document.getElementById('game').style.display = 'block';
+
+				// Show enter game button if game is ready
+				if (d.redirect_to_game || d.claimed_count >= 5) {
+					document.getElementById('enterGameBtn').style.display = 'inline';
+				}
+
+				// start polling game details to show joined players
+				selectedGameId = id;
+				if (pollInterval) clearInterval(pollInterval);
+				pollInterval = setInterval(() => refreshGame(selectedGameId), 2000);
+				refreshGame(selectedGameId);
+
+				document.getElementById("createSection").style.display = 'none';
+				document.getElementById("gamesList").style.display = 'none';
+				document.getElementById("joinSection").style.display = 'none';
+			}).catch(err => { alert('Network error: ' + err); });
+		}
+
+		function joinGame_Auto(id, name) {
+
+			if (!id || !name) return alert('Select a game and enter your exact name');
+
+			fetch('join_game.php', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: `game_id=${id}&name=${encodeURIComponent(name)}`
+			}).then(r => r.json()).then(d => {
+				if (!d.success) return alert('Join error: ' + (d.error || 'unknown'));
+
+				currentPlayerName = name;
+
+				// show role (and spies if spy)
+				let txt = `Welcome ${d.name}! Role: ${d.role.toUpperCase()}`;
+				if (d.spies && d.spies.length) txt += '\nYour fellow spy(s): ' + d.spies.join(', ');
+				document.getElementById('roleReveal').innerText = txt;
+				document.getElementById('game').style.display = 'block';
+
+				// Show enter game button if game is ready
+				if (d.redirect_to_game || d.claimed_count >= 5) {
+					document.getElementById('enterGameBtn').style.display = 'inline';
+				}
+
+				// start polling game details to show joined players
+				selectedGameId = id;
+				if (pollInterval) clearInterval(pollInterval);
+				pollInterval = setInterval(() => refreshGame(selectedGameId), 2000);
+				refreshGame(selectedGameId);
+
+				document.getElementById("createSection").style.display = 'none';
+				document.getElementById("gamesList").style.display = 'none';
+				document.getElementById("joinSection").style.display = 'none';
+			}).catch(err => { alert('Network error: ' + err); });
+		}
+
+		function enterGame() {
+			if (!selectedGameId || !currentPlayerName) {
+				alert('No game selected or not joined yet');
+				return;
+			}
+
+			const url = `game.php?game_id=${selectedGameId}&player=${encodeURIComponent(currentPlayerName)}`;
+			window.location.href = url;
+		}
+
+		function refreshGame(id) {
+
+			fetch(`get_game.php?game_id=${id}`).then(r => r.json()).then(d => {
+				if (!d.success) return;
+
+				const claimedCount = d.players.filter(p => p.claimed == 1).length;
+				const statusText = d.game.status === 'active' ? 'Playing' : 'Waiting';
+
+				document.getElementById('status').innerText = `Status: ${statusText} — ${claimedCount}/5 joined.`;
+
+				const pl = document.getElementById('playersList');
+				pl.innerHTML = '';
+				x = 0;
+
+				d.players.forEach(p => {
+					const div = document.createElement('div');
+					div.className = 'slot';
+					if (p.claimed == 1) div.classList.add('game-ready');
+					div.innerHTML = `<span>${escapeHtml(p.name)}</span><span>${p.claimed == 1 ? 'Joined' : 'Waiting'}</span>`;
+					pl.appendChild(div);
+
+					const qr = document.getElementById('player_qr_' + x);
+
+					if (p.claimed == 0) {
+						qr.classList.remove("hidden");
+						document.getElementById('player_' + x).src = "phpqrcode.php?game_id=" + id + "&name=" + p.name;
+						document.getElementById('player_name_' + x).innerHTML = p.name;
+					}
+					else {
+						qr.classList.add("hidden");
+					}
+					x = x + 1;
+
+				});
+
+				// Show enter game button if all joined
+				if (claimedCount >= 5 && currentPlayerName) {
+					document.getElementById('enterGameBtn').style.display = 'inline';
+				}
+
+				// update slots view if join section visible
+				if (document.getElementById('joinSection').style.display !== 'none') {
+					loadGameDetails(id);
+				}
+			}).catch(err => { console.error(err); });
+
+		}
+
+		function killGame(id) {
+			if (!confirm('Kill game? This cannot be undone.')) return;
+			fetch('kill_game.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'id=' + id })
+				.then(r => r.json()).then(d => {
+					if (!d.success) return alert('Kill error: ' + (d.error || 'unknown'));
+					loadGames();
+				});
+		}
+
+		function sendSmsPrompt(playerName) {
+
+			const number = prompt(`Enter phone number for ${playerName} (format: +614xxxxxxxx):`);
+
+			if (!number) return; // cancelled
+
+			const regex = /^\+614\d{8}$/;
+			if (!regex.test(number)) {
+				alert("Invalid number. Must be in format +614xxxxxxxx");
+				return;
+			}
+
+			window.location.href = `send_sms.php?number=${encodeURIComponent(number)}`;
+		}
+
+		function escapeHtml(s) {
+			return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+		}
+
+		function onLoad_Handler() {
+			
+			const id = params.get("game_id");
+			const name = params.get("name");
+
+			if (id == null && name == null) {
+				loadGames(); 
+			}
+			else {
+				joinGame_Auto(id, name);
+				loadGames(); 
+			}
+
+		}
+
+		window.onload = onLoad_Handler;
+
+		setInterval(function() {
+			if (document.getElementById("gamesList").style.display == 'block') {
+				loadGames(); 
+			}
+		}, 5000); 
+
+	</script>
+
+</body>
+
+</html>

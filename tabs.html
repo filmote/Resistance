@@ -1,0 +1,193 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple CSS Tabs</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    /* Container */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #ccc;
+      margin-bottom: 1rem;
+    }
+
+    /* Tab buttons */
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      outline: none;
+      transition: background 0.3s;
+    }
+    .tab:hover {
+      background: #f2f2f2;
+    }
+
+    /* Active tab */
+    input[name="tab-control"] {
+      display: none;
+    }
+
+    input[name="tab-control"]:checked + label {
+      border-bottom: 2px solid #25AAE2;
+      font-weight: bold;
+    }
+
+    /* Content */
+    .content {
+      display: none;
+      padding: 10px;
+    }
+
+    #tab1:checked ~ .content-container #content1,
+    #tab2:checked ~ .content-container #content2,
+    #tab3:checked ~ .content-container #content3 {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="tab-system">
+    < !-- Tabs -- >
+    <div class="tabs">
+      <input type="radio" id="tab1" name="tab-control" checked>
+      <label for="tab1" class="tab">Tab 1</label>
+
+      <input type="radio" id="tab2" name="tab-control">
+      <label for="tab2" class="tab">Tab 2</label>
+
+      <input type="radio" id="tab3" name="tab-control">
+      <label for="tab3" class="tab">Tab 3</label>
+    </div>
+
+    < !-- Tab Content -- >
+    <div class="content-container">
+      <div id="content1" class="content">
+        <h2>Content 1</h2>
+        <p>This is the first tab’s content.</p>
+      </div>
+      <div id="content2" class="content">
+        <h2>Content 2</h2>
+        <p>This is the second tab’s content.</p>
+      </div>
+      <div id="content3" class="content">
+        <h2>Content 3</h2>
+        <p>This is the third tab’s content.</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html> -->
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple CSS Tabs</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+
+  /* Container */
+  .tabs {
+    display: flex;
+    border-bottom: 2px solid #ccc;
+    margin-bottom: 1rem;
+  }
+
+  /* Tab buttons */
+  .tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    outline: none;
+    transition: background 0.3s;
+  }
+  .tab:hover {
+    background: #f2f2f2;
+  }
+
+  /* Hide radios */
+  input[name="tab-control"] {
+    display: none;
+  }
+
+  /* Active tab */
+  input[name="tab-control"]:checked + label {
+    border-bottom: 2px solid #25AAE2;
+    font-weight: bold;
+    background: #e0e0e0; /* grey background */
+  }
+
+  /* Content */
+  .content {
+    display: none;
+    padding: 10px;
+  }
+
+  #tab1:checked ~ .content-container #content1,
+  #tab2:checked ~ .content-container #content2,
+  #tab3:checked ~ .content-container #content3 {
+    display: block;
+  }
+</style>
+
+</head>
+<body>
+
+  <div class="tab-system">
+    <!-- Tabs -->
+    <div class="tabs">
+      <input type="radio" id="tab1" name="tab-control" checked>
+      <label for="tab1" class="tab">Tab 1</label>
+
+      <input type="radio" id="tab2" name="tab-control">
+      <label for="tab2" class="tab">Tab 2</label>
+
+      <input type="radio" id="tab3" name="tab-control">
+      <label for="tab3" class="tab">Tab 3</label>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="content-container">
+      <div id="content1" class="content">
+        <h2>Content 1</h2>
+        <p>This is the first tab’s content.</p>
+      </div>
+      <div id="content2" class="content">
+        <h2>Content 2</h2>
+        <p>This is the second tab’s content.</p>
+      </div>
+      <div id="content3" class="content">
+        <h2>Content 3</h2>
+        <p>This is the third tab’s content.</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+<script>
+  document.querySelectorAll('input[name="tab-control"]').forEach(tab => {
+    tab.addEventListener('change', (e) => {
+      console.log("Tab changed to:", e.target.id); 
+      // You can run any code here, e.g.:
+      alert(`Switched to ${e.target.nextElementSibling.textContent}`);
+    });
+  });
+</script>
+
+</html>
